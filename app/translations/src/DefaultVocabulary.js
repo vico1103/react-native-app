@@ -43,6 +43,7 @@ const Translations = {
   'SingleHotel.RoomList.Rooms': 'Rooms',
 
   'HotelsSearch.LoadMode': 'Load more...',
+  'HotelsSearch.LocationButton.Placeholder': 'Where do you go?',
   'HotelsSearch.Filter.StarsPopup.Save': 'Save',
   'HotelsSearch.Filter.StarsFilter.Stars': 'stars',
   'HotelsSearch.Filter.StarsFilter.Unrated': 'unrated',

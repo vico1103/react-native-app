@@ -37,6 +37,8 @@ type Props = {|
   onFilterChange: OnChangeFilterParams => void,
   currency: string,
   openSingleHotel: (searchParams: AvailableHotelSearchInput) => void,
+  openLocationPicker: () => void,
+  cityId: string | null,
 |};
 
 /**
@@ -86,32 +88,41 @@ class AllHotels extends React.Component<Props> {
         >
           <SearchForm
             onChange={this.props.onSearchChange}
-            onLocationChange={this.props.onLocationChange}
             search={this.props.search}
             location={this.props.location}
+            openLocationPicker={this.props.openLocationPicker}
           />
           <FilterStripe
             filter={this.props.filter}
             onChange={this.props.onFilterChange}
             currency={this.props.currency}
           />
-          <PublicApiRenderer
-            query={graphql`
-              query AllHotels_cityLookup_Query($prefix: String!) {
-                city: hotelCities(prefix: $prefix, first: 1) {
-                  edges {
-                    node {
-                      id
+          {this.props.cityId ? (
+            <AllHotelsSearch
+              coordinates={this.props.coordinates}
+              openSingleHotel={this.props.openSingleHotel}
+              cityId={this.props.cityId}
+              currency={this.props.currency}
+            />
+          ) : (
+            <PublicApiRenderer
+              query={graphql`
+                query AllHotels_cityLookup_Query($prefix: String!) {
+                  city: hotelCities(prefix: $prefix, first: 1) {
+                    edges {
+                      node {
+                        id
+                      }
                     }
                   }
                 }
-              }
-            `}
-            render={this.renderAllHotelsSearchPublicRenderer}
-            variables={{
-              prefix: this.props.location,
-            }}
-          />
+              `}
+              render={this.renderAllHotelsSearchPublicRenderer}
+              variables={{
+                prefix: this.props.location,
+              }}
+            />
+          )}
         </ScrollView>
       </Layout>
     </AppStateChange>
@@ -126,6 +137,7 @@ const select = ({
   filters: FilterReducerState,
 }) => ({
   location: hotels.location,
+  cityId: hotels.cityId,
   search: hotels.searchParams,
   filter: filters.filterParams,
 });

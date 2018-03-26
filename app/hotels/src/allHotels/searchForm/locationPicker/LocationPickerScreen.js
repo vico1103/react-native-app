@@ -11,6 +11,7 @@ import {
 } from '@kiwicom/react-native-app-shared';
 import { type NavigationType } from '@kiwicom/react-native-app-navigation';
 import { PublicApiRenderer } from '@kiwicom/react-native-app-relay';
+import { connect } from '@kiwicom/react-native-app-redux';
 import Translation from '@kiwicom/react-native-app-translations';
 import { graphql } from 'react-relay';
 
@@ -19,6 +20,7 @@ import SuggestionList from './SuggestionList';
 
 type Props = {|
   navigation: NavigationType,
+  onCitySelected: (cityId: string, cityName: string) => void,
 |};
 
 type NavigationProps = {|
@@ -76,17 +78,13 @@ const styles = StyleSheet.create({
   },
 });
 
-export default class LocationPicker extends React.Component<Props, State> {
+export class LocationPicker extends React.Component<Props, State> {
   state = {
     search: '',
     cityId: '',
   };
 
-  static navigationOptions = ({
-    navigation,
-    cityId,
-    cityName,
-  }: NavigationProps) => {
+  static navigationOptions = ({ navigation }: NavigationProps) => {
     function goBack() {
       navigation.goBack();
     }
@@ -96,7 +94,7 @@ export default class LocationPicker extends React.Component<Props, State> {
       // Solution is go back and pass an on select function from parent
       // https://github.com/react-navigation/react-navigation/issues/288#issuecomment-315684617
       goBack();
-      navigation.state.params.onSelect(cityId, cityName);
+      navigation.state.params.onConfirm();
     }
 
     function headerLeft() {
@@ -135,19 +133,24 @@ export default class LocationPicker extends React.Component<Props, State> {
   };
 
   componentDidMount = () => {
-    this.props.navigation.setParams({ cityId: '' });
+    this.props.navigation.setParams({ onConfirm: this.onCityConfirmed });
   };
 
   onTextChange = (search: string) => {
     // Resetting cityId and cityName when typing
     // If user selects Rome, starts typing, we should disable input until user makes new selection
     this.setState({ search, cityId: '' });
-    this.props.navigation.setParams({ cityId: '', cityName: '' });
   };
 
   onCitySelected = (cityId: string, cityName: string) => {
+    // User clicks on a city
     this.setState({ search: cityName, cityId });
-    this.props.navigation.setParams({ cityId, cityName });
+  };
+
+  onCityConfirmed = () => {
+    // User clicks on confirm header button
+    const { search, cityId } = this.state;
+    this.props.onCitySelected(cityId, search);
   };
 
   renderSuggestions = (rendererProps: LocationSuggestions) => {
@@ -187,3 +190,14 @@ export default class LocationPicker extends React.Component<Props, State> {
     );
   };
 }
+
+const action = dispatch => ({
+  onCitySelected: (cityId: string, cityName: string) =>
+    dispatch({
+      type: 'setLocationAndCityId',
+      cityId,
+      location: cityName,
+    }),
+});
+
+export default connect(null, action)(LocationPicker);
